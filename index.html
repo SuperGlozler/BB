@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <script type="text/javascript" src="extras/jquery.min.1.7.js"></script>
 <script type="text/javascript" src="extras/modernizr.2.5.3.min.js"></script>
 <link rel="stylesheet" href="css/style.css">
@@ -34,22 +34,79 @@
 function loadApp() {
     var flipbook = $('.flipbook');
 
-    // Check if we are on a mobile device
-    var isMobile = $(window).width() < 600;
-    
-    // Set dynamic width and height based on screen
-    var width = isMobile ? $(window).width() * 0.95 : 1123 * 2;
-    var height = isMobile ? $(window).height() * 0.7 : 794;
+    function updateSize() {
+        var winWidth = window.innerWidth;
+        var winHeight = window.innerHeight;
+        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || winWidth < 1024;
+        
+        var config = {
+            display: 'double',
+            widthScale: 0.85,
+            heightScale: 0.85
+        };
 
-	// Create the flipbook
-	flipbook.turn({
-			width: width,
-			height: height,
-			elevation: 50,
-			gradients: true,
-			autoCenter: true,
-            display: isMobile ? 'single' : 'double'
-	});
+        if (isMobile) {
+            // --- PART 1: MOBILE CONFIGURATION ---
+            var isPortrait = winHeight > winWidth;
+            
+            config.display = isPortrait ? 'single' : 'double';
+            config.widthScale = 0.95;
+            config.heightScale = 0.85; // Leave room for browser UI and nav buttons
+            
+            console.log("Running in Mobile Mode - Display: " + config.display);
+        } else {
+            // --- PART 2: DESKTOP CONFIGURATION ---
+            config.display = 'double';
+            config.widthScale = 0.85; // Matches the "75% zoom" preference
+            config.heightScale = 0.85;
+            
+            console.log("Running in Desktop Mode - Display: " + config.display);
+        }
+
+        // --- SHARED ALGORITHM ---
+        var pageW = 1123;
+        var pageH = 794;
+        var aspect = (config.display === 'single') ? (pageW / pageH) : (pageW * 2 / pageH);
+        
+        var maxWidth = winWidth * config.widthScale;
+        var maxHeight = winHeight * config.heightScale;
+        
+        var newWidth, newHeight;
+        
+        if (maxWidth / maxHeight > aspect) {
+            newHeight = maxHeight;
+            newWidth = Math.round(newHeight * aspect);
+        } else {
+            newWidth = maxWidth;
+            newHeight = Math.round(newWidth / aspect);
+        }
+
+        if (flipbook.turn('is')) {
+            if (flipbook.turn('display') !== config.display) {
+                flipbook.turn('display', config.display);
+            }
+            flipbook.turn('size', newWidth, newHeight);
+        } else {
+            flipbook.turn({
+                width: newWidth,
+                height: newHeight,
+                elevation: 50,
+                gradients: true,
+                autoCenter: true,
+                display: config.display,
+                acceleration: true
+            });
+        }
+
+        $('.flipbook-viewport .container').css({
+            width: newWidth,
+            height: newHeight,
+            marginTop: Math.max(0, (winHeight - newHeight) / 2)
+        });
+    }
+
+    // Initial load
+    updateSize();
 
     // Navigation buttons
     $('.prev-btn').click(function() {
@@ -62,17 +119,16 @@ function loadApp() {
 
     // Prevent scrolling when touching the flipbook
     document.addEventListener('touchmove', function(e) {
-        e.preventDefault();
+        if (e.target.className.indexOf('nav-btn') === -1) {
+            e.preventDefault();
+        }
     }, { passive: false });
 
-    // Handle window resize
-    $(window).resize(function() {
-        var newIsMobile = $(window).width() < 600;
-        var newWidth = newIsMobile ? $(window).width() * 0.95 : 1123 * 2;
-        var newHeight = newIsMobile ? $(window).height() * 0.7 : 794;
-        
-        flipbook.turn('size', newWidth, newHeight);
-        flipbook.turn('display', newIsMobile ? 'single' : 'double');
+    // Handle window resize and orientation change with a small delay for iOS stability
+    var resizeTimer;
+    $(window).on('resize orientationchange', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(updateSize, 200);
     });
 }
 
