@@ -1,8 +1,12 @@
-body{
+html, body {
 	overflow:hidden;
 	background-color:#fcfcfc;
 	margin:0;
 	padding:0;
+    height: 100%;
+    /* Prevent pull-to-refresh and overflow scrolls */
+    overscroll-behavior: none;
+    touch-action: none;
 }
 
 .flipbook-viewport{
@@ -12,10 +16,12 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
+    touch-action: none;
 }
 
 .flipbook-viewport .container{
 	margin:auto;
+    position: relative;
 }
 
 .flipbook-viewport .flipbook{
@@ -39,10 +45,39 @@ body{
 	box-shadow:0 0 20px rgba(0,0,0,0.2);
 }
 
+/* Navigation Buttons for Mobile */
+.nav-btn {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 60px;
+    font-size: 24px;
+    z-index: 1000;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-btn:active {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.prev-btn { left: 20px; }
+.next-btn { right: 20px; }
+
 /* Mobile Adjustments */
 @media only screen and (max-width: 600px) {
     .flipbook-viewport .flipbook {
         width: 95vw;
         height: 70vh;
+    }
+    .nav-btn {
+        display: block;
     }
 }

@@ -6,10 +6,6 @@
 <script type="text/javascript" src="extras/jquery.min.1.7.js"></script>
 <script type="text/javascript" src="extras/modernizr.2.5.3.min.js"></script>
 <link rel="stylesheet" href="css/style.css">
-<style>
-    /* Ensure the container fills the viewport */
-    html, body { height: 100%; margin: 0; padding: 0; }
-</style>
 </head>
 <body>
 
@@ -30,6 +26,9 @@
 	</div>
 </div>
 
+<div class="nav-btn prev-btn">❮</div>
+<div class="nav-btn next-btn">❯</div>
+
 <script type="text/javascript">
 
 function loadApp() {
@@ -49,9 +48,22 @@ function loadApp() {
 			elevation: 50,
 			gradients: true,
 			autoCenter: true,
-            // Use single page display on mobile
             display: isMobile ? 'single' : 'double'
 	});
+
+    // Navigation buttons
+    $('.prev-btn').click(function() {
+        flipbook.turn('previous');
+    });
+
+    $('.next-btn').click(function() {
+        flipbook.turn('next');
+    });
+
+    // Prevent scrolling when touching the flipbook
+    document.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
 
     // Handle window resize
     $(window).resize(function() {
